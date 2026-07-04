@@ -1,0 +1,1331 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Picker &amp; Offers — Raj's Stack</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#171a21;
+    --panel-2:#1e222b;
+    --border:#2a2f3a;
+    --text:#e8e9ec;
+    --muted:#9398a6;
+    --accent:#4fd1a5;
+    --accent-2:#f2b84b;
+    --danger:#e8695f;
+    --ltf:#4fd1a5;
+    --fee:#f2b84b;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.5;
+  }
+  header{
+    padding:28px 20px 18px;
+    text-align:center;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#151822,#0f1115);
+  }
+  header h1{
+    margin:0 0 6px;
+    font-size:1.6rem;
+    letter-spacing:-0.02em;
+  }
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:0.9rem;
+  }
+  nav.tabs{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:14px 12px;
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:10;
+    border-bottom:1px solid var(--border);
+  }
+  nav.tabs button{
+    background:var(--panel);
+    color:var(--muted);
+    border:1px solid var(--border);
+    padding:9px 16px;
+    border-radius:999px;
+    font-size:0.88rem;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  nav.tabs button:hover{ color:var(--text); border-color:#3a4152; }
+  nav.tabs button.active{
+    background:var(--accent);
+    color:#0b0f0d;
+    border-color:var(--accent);
+    font-weight:600;
+  }
+  main{
+    max-width:980px;
+    margin:0 auto;
+    padding:20px 16px 80px;
+  }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  .cat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:8px;
+    margin-bottom:22px;
+  }
+  .cat-btn{
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:var(--radius);
+    padding:14px 10px;
+    cursor:pointer;
+    text-align:center;
+    font-size:0.88rem;
+    transition:all .15s ease;
+  }
+  .cat-btn:hover{ border-color:var(--accent); transform:translateY(-1px); }
+  .cat-btn.active{ background:var(--accent); color:#0b0f0d; border-color:var(--accent); font-weight:600; }
+  .cat-btn .emoji{ display:block; font-size:1.4rem; margin-bottom:4px; }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:18px;
+  }
+  .panel h2{ margin-top:0; font-size:1.15rem; }
+  .panel h3{ font-size:0.95rem; color:var(--accent); margin:18px 0 8px; text-transform:uppercase; letter-spacing:.04em; }
+  .panel h3:first-of-type{ margin-top:4px; }
+
+  .sort-row{ display:flex; gap:8px; align-items:center; margin-bottom:10px; font-size:0.85rem; color:var(--muted); }
+  .sort-row select{
+    background:var(--panel-2); color:var(--text); border:1px solid var(--border);
+    border-radius:6px; padding:4px 8px; font-size:0.85rem;
+  }
+
+  table{ width:100%; border-collapse:collapse; font-size:0.86rem; }
+  th,td{ text-align:left; padding:9px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th{ color:var(--muted); font-weight:600; font-size:0.76rem; text-transform:uppercase; letter-spacing:.03em; }
+  tr.best td{ background:rgba(79,209,165,0.08); }
+  tr.best td:first-child{ border-left:2px solid var(--accent); }
+  td.num{ white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .note{ color:var(--muted); font-size:0.82rem; }
+  .neg{ color:var(--danger); }
+  .pos{ color:var(--accent); }
+
+  .card-picker{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .card-chip{
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:8px 14px;
+    border-radius:999px;
+    cursor:pointer;
+    font-size:0.85rem;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .card-chip:hover{ border-color:var(--accent); }
+  .card-chip.active{ background:var(--accent); color:#0b0f0d; border-color:var(--accent); font-weight:600; }
+  .dot{ width:7px; height:7px; border-radius:50%; display:inline-block; }
+  .dot.ltf{ background:var(--ltf); }
+  .dot.fee{ background:var(--fee); }
+
+  .badge{
+    display:inline-block;
+    font-size:0.72rem;
+    padding:2px 8px;
+    border-radius:999px;
+    font-weight:600;
+  }
+  .badge.ltf{ background:rgba(79,209,165,0.15); color:var(--ltf); }
+  .badge.fee{ background:rgba(242,184,75,0.15); color:var(--fee); }
+
+  ul.clean{ margin:0; padding-left:18px; }
+  ul.clean li{ margin-bottom:6px; font-size:0.9rem; }
+  .warn{ color:var(--accent-2); }
+
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:640px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .offer-code{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:4px 8px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:0.8rem;
+    color:var(--accent-2);
+  }
+
+  details{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 14px;
+    margin-bottom:8px;
+  }
+  details summary{
+    cursor:pointer;
+    font-weight:600;
+    font-size:0.9rem;
+  }
+  details[open] summary{ margin-bottom:8px; }
+
+  .gap-item{
+    border-bottom:1px solid var(--border);
+    padding:12px 0;
+    font-size:0.88rem;
+  }
+  .gap-item:last-child{ border-bottom:none; }
+  .gap-item b{ color:var(--accent-2); }
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:0.78rem;
+    padding:24px 16px 40px;
+  }
+
+  .search-box{
+    width:100%;
+    padding:10px 14px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text);
+    font-size:0.9rem;
+    margin-bottom:16px;
+  }
+  .search-box:focus{ outline:none; border-color:var(--accent); }
+
+  .live-offers-head{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:flex-start;
+    margin-bottom:14px;
+  }
+  .live-offers-head h2{ margin-bottom:4px; }
+  .refresh-btn{
+    background:var(--accent);
+    color:#0b0f0d;
+    border:1px solid var(--accent);
+    border-radius:999px;
+    padding:9px 14px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .refresh-btn:disabled{
+    cursor:wait;
+    opacity:.7;
+  }
+  .offer-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:10px;
+  }
+  .offer-card{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px;
+  }
+  .offer-card h3{
+    margin:0 0 4px;
+    color:var(--text);
+    text-transform:none;
+    letter-spacing:0;
+    font-size:.98rem;
+  }
+  .offer-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin:8px 0;
+  }
+  .pill{
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:2px 8px;
+    color:var(--muted);
+    font-size:.74rem;
+  }
+  .pill.high{ color:var(--accent); border-color:rgba(79,209,165,.45); }
+  .pill.medium{ color:var(--accent-2); border-color:rgba(242,184,75,.45); }
+  .pill.low{ color:var(--danger); border-color:rgba(232,105,95,.45); }
+  .status-line{
+    color:var(--muted);
+    font-size:.84rem;
+    margin:4px 0 0;
+  }
+  .offer-source-toggle summary{
+    color:var(--accent);
+    font-size:.8rem;
+  }
+  .offer-source-toggle a{
+    color:var(--text);
+    word-break:break-word;
+    font-size:.8rem;
+  }
+  @media (max-width:640px){
+    .live-offers-head{ flex-direction:column; }
+    .refresh-btn{ width:100%; }
+  }
+
+  .empty-state{ color:var(--muted); text-align:center; padding:40px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💳 Card Picker &amp; Offers</h1>
+  <p>Raj's 11-card stack — verified July 2026 · BRR = realistic redemption · MRR = best achievable redemption</p>
+</header>
+
+<nav class="tabs">
+  <button data-view="category" class="active">Pick by Category</button>
+  <button data-view="card">Pick by Card</button>
+  <button data-view="offers">Offers &amp; Codes</button>
+  <button data-view="gaps">Data Gaps</button>
+</nav>
+
+<main>
+
+  <!-- CATEGORY PICKER VIEW -->
+  <section id="view-category" class="view active">
+    <input type="text" id="catSearch" class="search-box" placeholder="Search categories… (e.g. hotels, fuel, forex)">
+    <div class="cat-grid" id="catGrid"></div>
+    <div class="panel" id="catResult">
+      <div class="empty-state">Pick a category above to see every card ranked by reward rate.</div>
+    </div>
+  </section>
+
+  <!-- CARD DETAIL VIEW -->
+  <section id="view-card" class="view">
+    <div class="card-picker" id="cardPicker"></div>
+    <div class="panel" id="cardResult">
+      <div class="empty-state">Pick a card above to see its full profile and category rankings.</div>
+    </div>
+  </section>
+
+  <!-- OFFERS VIEW -->
+  <section id="view-offers" class="view">
+
+    <div class="panel" id="liveOffersPanel">
+      <div class="live-offers-head">
+        <div>
+          <h2>Live Offers</h2>
+          <p class="note" id="liveOffersMeta">Not scanned yet. Deploy on Netlify, add the two API keys, then refresh.</p>
+        </div>
+        <button class="refresh-btn" id="refreshOffersBtn" type="button">Refresh Now</button>
+      </div>
+      <div id="liveOffersBody" class="empty-state">Live offers will appear here after the first scan.</div>
+    </div>
+
+    <div class="panel">
+      <h2>✈️ HSBC TravelOne — Aggregator Discount Codes</h2>
+      <p class="note">Stack these instant discounts with Track A points (4 RP/₹100) on the discounted amount, transferred to Accor. Usage limits vary by platform — several are unpublished by HSBC, so re-verify before relying on repeat use.</p>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Platform</th><th>Code</th><th>Domestic</th><th>International</th><th>Hotels</th><th>Valid Till</th><th>Frequency</th></tr></thead>
+        <tbody id="hsbcOffersBody"></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>⛽ AmEx MRCC — Fuel Milestone Boost</h2>
+      <p>Structure fuel spend as <b>exactly 4 separate transactions of ₹1,500</b> (₹6,000 total) in one calendar month. This triggers the monthly milestone of 1,000 bonus MR points, worth ₹250 (BRR) or ₹500 (MRR via Marriott) on that ₹6,000 — an effective <span class="pos">4.17% BRR / 8.33% MRR</span> on that specific spend pattern only.</p>
+      <p class="note warn">⚠ Must be exactly 4 separate ₹1,500 transactions — fewer or larger swipes don't trigger it. Fuel itself still earns 0 points; this is purely the milestone bonus.</p>
+    </div>
+
+    <div class="panel">
+      <h2>🎬 HDFC Swiggy — Cleartrip Instant Discounts</h2>
+      <ul class="clean">
+        <li>Flights: flat 6% instant discount + 5% cashback on the discounted amount (added 17 Apr 2026) → 10.70% effective</li>
+        <li>Hotels: flat 19% instant discount + 5% cashback on the discounted amount (added 17 Apr 2026) → 23.05% effective, the single highest return in the entire stack outside HSBC's Hopper portal</li>
+      </ul>
+      <p class="note">Both capped at ₹1,500/billing cycle combined with the rest of the Swiggy 10%/5% buckets.</p>
+    </div>
+
+    <div class="panel">
+      <h2>🎟️ HSBC TravelOne — Movies</h2>
+      <p>Buy 1 Get 1 free movie ticket (up to ₹200 off), twice a month, via the District by Zomato app, promo code <span class="offer-code">HSBCTOMOV</span>.</p>
+    </div>
+
+    <div class="panel">
+      <h2>💰 Fee Waiver &amp; Milestone Thresholds</h2>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Card</th><th>Fee</th><th>Waiver / Key Milestone</th></tr></thead>
+        <tbody id="feeWaiverBody"></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>🎯 Milestone Targets, Per Card</h2>
+      <div id="milestoneAccordion"></div>
+    </div>
+
+  </section>
+
+  <!-- DATA GAPS VIEW -->
+  <section id="view-gaps" class="view">
+    <div class="panel">
+      <h2>⚠️ Known Data Gaps &amp; Unresolved Conflicts</h2>
+      <p class="note">Flagged explicitly rather than silently resolved. Treat anything marked [low confidence] or [medium confidence] as directional, not gospel.</p>
+      <div id="gapsList"></div>
+    </div>
+    <div class="panel">
+      <h2>📚 Source Provenance</h2>
+      <ul class="clean">
+        <li>BRR/MRR figures originate from <code>card_picker_final_1.html</code>, the canonical source for this stack, carried forward unchanged through every later revision.</li>
+        <li>HSBC TravelOne's reward/cap structure was cross-checked against a personal Notion reference, with the Track A/Track B cap split independently confirmed.</li>
+        <li>Axis Atlas figures were independently verified from official Axis Bank sources and review sites — the Notion reference was deliberately excluded here since it predates the April 2026 Accor/Marriott/Qatar transfer-partner removal.</li>
+        <li>All other figures sourced from official bank pages (HDFC, ICICI, SBI, AU Small Finance Bank, American Express India, HSBC India), cross-verified against CardInsider, CardExpert, Magnify, PickMyWork, BankBazaar, and Paisabazaar, current as of July 2026.</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>Personal reference tool — verified July 2026. Rates, caps, and offers change often; re-check with the issuing bank before relying on any figure for a large purchase.</footer>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+
+const CARDS = {
+  "amex-mrcc": {
+    name: "AmEx MRCC", role: "Everyday Rewards", fee: "Lifetime Free", feeClass:"ltf",
+    milestones: [
+      "1,000 bonus MR points on 4 transactions of ₹1,500+ in a calendar month (needs one-time enrolment)",
+      "1,000 bonus MR points on ₹20,000+ spend in the same month — stack both for up to 2,000 MR/month"
+    ],
+    benefits: [
+      "Base: 1 MR point per ₹50 spent",
+      "2X MR points via the Amex Reward Multiplier portal on eligible online purchases",
+      "Wallet loads earn points too — unusual, most cards exclude this category entirely",
+      "0% convenience fee on fuel at HPCL for transactions under ₹5,000 (fuel itself earns no points, but the waiver applies)"
+    ],
+    lounge: ["None."],
+    forex: "3.5%",
+    insurance: ["⚠ Not prominently documented for this specific card — treat as none/minimal, low confidence."],
+    exclusions: [
+      "No points on fuel, insurance, or utilities",
+      "Excluded categories still count toward monthly milestone and annual fee-waiver spend totals"
+    ],
+    redemption: [
+      "18K / 24K Gold Collection: Amazon Pay, Flipkart, Myntra, Tanishq, Taj hotel vouchers",
+      "Marriott Bonvoy — Amex is the exclusive Indian transfer partner, ~1 MR : 1 Marriott point",
+      "Pay-with-points / statement credit: ~₹0.25 per point — poor value, avoid",
+      "Points never expire"
+    ],
+    other: ["Nothing notable beyond the standard structure."]
+  },
+  "regalia-gold": {
+    name: "HDFC Regalia Gold", role: "Travel + Lifestyle", fee: "Lifetime Free", feeClass:"ltf",
+    milestones: [
+      "₹1,500 Myntra / M&S / Reliance Digital / Marriott voucher every quarter on ₹1.5L quarterly spend",
+      "₹5,000 flight voucher at ₹5L annual spend, plus another ₹5,000 at ₹7.5L annual spend",
+      "The two ₹5,000 flight vouchers cannot be combined into a single booking"
+    ],
+    benefits: [
+      "Base: 5 RP per ₹200 (~1.625% effective), earned even on insurance, utilities, and education spend",
+      "5X accelerated rewards (25 RP/₹200) at Nykaa, Myntra, M&S, Reliance Digital — capped at 5,000 pts/month across all four brands combined",
+      "SmartBuy portal: up to 10X on hotel bookings, 5X on flights, 5X on instant vouchers",
+      "Complimentary Swiggy One + MMT Black Gold membership on ₹1L spend within 90 days",
+      "Good Food Trail dining program — up to 10% off via Swiggy Dineout",
+      "New Boarding Edge Program (from 15 May 2026): upload boarding pass on SmartBuy, choose any 2 benefits/quarter from spa session, 5-star buffet, room upgrade, or airport transfer (destination city only, 6-day window, add-on cardholders excluded)"
+    ],
+    lounge: [
+      "Domestic: 3 visits/quarter — requires ₹60,000 spend in the preceding calendar quarter, effective the Jul–Sep 2026 quarter onward",
+      "International: 6 visits/year via Priority Pass — unconditional, no spend requirement",
+      "⚠ No free guest visits on either domestic or international lounges — Priority Pass guests are charged US$27+GST per visit regardless of the cardholder's own quota, and domestic HDFC lounge vouchers are for the cardholder only."
+    ],
+    forex: "Base 2% (DCC 1.75% from 15 May 2026). With HDFC Global Value Program (GVP) enrolled: effective ~1% — GVP gives 1% cashback on all intl/forex spend, capped ₹1,000/cycle. Costs ₹199+GST/yr, auto-renews. Also unlocks a ₹2,000 travel voucher on ₹1.5L+ intl spend/year. Excludes gaming/betting merchants and ATM withdrawals; not retroactive. ⚠ Enroll via HDFC customer care 1800 1600 / 1800 2600 or customerservices.cards@hdfcbank.com — 3–5 business days to activate.",
+    insurance: [
+      "₹1 crore air accident cover",
+      "₹15 lakh emergency overseas hospitalization",
+      "₹9 lakh credit/card liability cover",
+      "Insurance premium spend counts toward both quarterly and annual milestones"
+    ],
+    exclusions: [
+      "No points on rent, wallet loads, fuel, or EMI conversion",
+      "Tax payments capped: only first 2 Income Tax + first 2 GST transactions per billing cycle earn points"
+    ],
+    redemption: [
+      "SmartBuy: 1 RP = ₹0.50 on flights/hotels",
+      "Gold Catalogue: Apple, Fitbit, Bose and other lifestyle products",
+      "Air miles/hotel transfer at 2 RP : 1 partner point, including Accor ALL (2 RP → 1 Accor pt → ₹2, i.e. 1 RP ≈ ₹1.00 via Accor — the best redemption route on this card)"
+    ],
+    other: ["₹199 card reissuance fee (new)"]
+  },
+  "tata-neu": {
+    name: "HDFC Tata Neu Infinity", role: "Tata Ecosystem", fee: "Lifetime Free", feeClass:"ltf",
+    milestones: ["None beyond the standard tiered reward structure — no separate spend-tier milestone bonuses."],
+    benefits: [
+      "5% NeuCoins on Tata Neu app + partner Tata brand spends (non-EMI); additional 5% via NeuPass on select categories, up to 10% combined",
+      "1.5% NeuCoins on all other retail spends and merchant EMI spends",
+      "RuPay variant: 0.5% NeuCoins on any UPI spend + 1% extra via the Tata Neu UPI ID specifically = 1.5% combined, capped at 500 NeuCoins/month",
+      "5% NeuCoins on utility bill payments, capped at 2,000 NeuCoins/month",
+      "Grocery, telecom & cable, and insurance spends are each separately capped at 2,000 NeuCoins/month — independent pools, not a shared cap"
+    ],
+    lounge: [
+      "Domestic: 8/year (2/quarter), requires ₹50,000 spend in the preceding calendar quarter",
+      "International: 4/year (1/quarter) via Priority Pass — no spend condition",
+      "⚠ No free guest visits — Priority Pass guests charged US$27+GST per visit; domestic lounge vouchers are for the cardholder only."
+    ],
+    forex: "2%",
+    insurance: [
+      "₹1 crore air accident cover",
+      "₹15 lakh emergency hospitalization",
+      "Up to ₹9 lakh lost-card liability"
+    ],
+    exclusions: [
+      "No NeuCoins on fuel, rent, government, wallet reloads, or post-transaction EMI conversion",
+      "No NeuCoins on online skill-based gaming (MCC 5816, from Jul 2025)",
+      "Education via third-party apps (CRED/Cheq/MobiKwik) excluded — direct school/college payment earns"
+    ],
+    redemption: [
+      "1 NeuCoin = ₹1, redeemable on Tata Neu app + partner brands",
+      "Not redeemable on Air India, Tata Play, or Bill Payment",
+      "Expires 12 months from end of credit month"
+    ],
+    other: ["Nothing notable beyond the standard structure."]
+  },
+  "swiggy": {
+    name: "HDFC Swiggy", role: "Food & Online", fee: "Lifetime Free", feeClass:"ltf",
+    milestones: ["No spend-tier milestones — pure category cashback structure."],
+    benefits: [
+      "10% cashback on Swiggy app (Food Ordering, Instamart, Dineout, Genie), capped ₹1,500/billing cycle, minimum ₹249/transaction (effective 17 Apr 2026)",
+      "5% cashback on select online categories (apparel, electronics, dept stores, local cabs, etc.), including 5% on Cleartrip flights/hotels, capped ₹1,500/cycle, min ₹100/transaction",
+      "1% cashback on all other spends, capped ₹500/cycle, min ₹100/transaction",
+      "Mastercard World golf: 4 complimentary green-fee rounds/year (1/month) + 12 free lessons/year (1/month); 50% off green fees beyond the complimentary quota"
+    ],
+    lounge: ["None."],
+    forex: "~3.5% (not a travel-focused card)",
+    insurance: ["None documented."],
+    exclusions: ["Fuel, rent, EMI, jewellery, government, Swiggy Money wallet, Swiggy Minis, Swiggy Liquor"],
+    redemption: ["Cashback auto-credited as statement credit, settled the following month"],
+    other: ["1% fuel surcharge waiver, ₹400–5,000 range"]
+  },
+  "onecard": {
+    name: "OneCard", role: "Forex + Everyday", fee: "Lifetime Free", feeClass:"ltf",
+    milestones: ["None — the card is already structurally free, with no tier-upgrade mechanics."],
+    benefits: [
+      "Base: 1 Reward Point per ₹50 (≈0.2% effective at ₹0.10/RP)",
+      "5X on your top 2 spend categories of the month — needs spend across ≥3 categories with a minimum ₹750 in each; concentrating spend in only 1–2 categories disqualifies the bonus entirely for that month",
+      "Education/bills/insurance capped at 25,000 RP/month when eligible for the 5X bonus",
+      "BBPS in-app utility bill payments now carry zero convenience fee, effective April 2026",
+      "100% fuel surcharge waiver up to ₹400/month"
+    ],
+    lounge: ["None."],
+    forex: "1% — the lowest in your entire stack (≈1.18% effective with GST)",
+    insurance: ["None — confirmed explicitly across multiple 2026 sources: no purchase protection, no air accident cover, no travel medical, no baggage cover."],
+    exclusions: ["No rewards on rent or wallet loads (a staggered 1–2% surcharge on these is rolling out across partner-bank issuers through 2026)"],
+    redemption: [
+      "1 Reward Point = ₹0.10 (not ₹1, despite what some aggregator sites claim)",
+      "No transfer partners — closed-loop currency, cannot move to any airline or hotel program",
+      "Redeem via \"swipe right\" against a specific transaction in-app, within a 2-month window"
+    ],
+    other: ["Nothing notable beyond the standard structure."]
+  },
+  "amazon-pay": {
+    name: "ICICI Amazon Pay", role: "Amazon Ecosystem", fee: "Lifetime Free", feeClass:"ltf",
+    milestones: ["None — flat cashback structure with no spend-based tiers."],
+    benefits: [
+      "5% cashback on Amazon.in for Prime members, 3% for non-Prime",
+      "2% cashback at 100+ Amazon Pay partner merchants (via \"Login with Amazon\")",
+      "1% cashback on all other spends, uncapped, no expiry",
+      "iShop: up to 12X points / instant discounts on flights and hotels"
+    ],
+    lounge: ["None."],
+    forex: "1.99%",
+    insurance: ["None."],
+    exclusions: [
+      "No cashback on fuel, rent, taxes, education, EMI (including post-facto EMI conversion), Amazon Business orders, physical/digital gold on Amazon, or utilities/international spend done outside Amazon.in",
+      "A mixed cart containing any excluded-category item forfeits cashback on the entire order",
+      "⚠ New fees effective 15 January 2026: 1% fee on wallet loads ≥₹5,000; 2% fee on skill-based gaming; 1% fee on utility payments exceeding ₹50,000/month"
+    ],
+    redemption: [
+      "Cashback auto-credited to Amazon Pay balance, uncapped, no expiry",
+      "Cannot convert to statement credit or cash"
+    ],
+    other: ["1% fuel surcharge waiver, ₹400–₹4,000 range, max ₹400/cycle"]
+  },
+  "au-xcite": {
+    name: "AU Xcite Ultra", role: "Offline/Online/Intl Rewards", fee: "Lifetime Free", feeClass:"ltf",
+    milestones: [
+      "500 bonus RP on ₹5,000+ spend between the 1st–5th of each month (excl. rent/wallet/fuel)",
+      "5,000 bonus RP on ₹2.5L retail spend in the card anniversary year"
+    ],
+    benefits: [
+      "4 RP per ₹100 offline, 8 RP per ₹100 online, 12 RP per ₹100 international",
+      "Utility/Telecom & Insurance spend earns a reduced 1 RP/₹100 (not zero)",
+      "Complimentary device protection plan + 1-year extended warranty on mobiles/tablets/laptops/white goods",
+      "Concierge services for travel, entertainment, leisure bookings, and golf"
+    ],
+    lounge: [
+      "Domestic: 2/quarter — requires ₹50,000 spend in the preceding quarter (raised from ₹20,000, effective 10 Apr 2026)",
+      "Railway: 8/year (2/quarter) via Dreamfolks",
+      "International: none.",
+      "⚠ No free guest visits documented for domestic or railway lounges."
+    ],
+    forex: "3.49% + GST (≈4.12% effective)",
+    insurance: [
+      "Air accident cover: ₹20 lakh per the official AU Bank page (several review sites incorrectly repeat ₹50 lakh — official page is authoritative)",
+      "₹25,000 purchase protection",
+      "₹2 lakh credit shield",
+      "Travel covers: baggage loss/delay, flight delay, passport loss, hijack"
+    ],
+    exclusions: ["No RP on rent, wallet, or fuel"],
+    redemption: ["1 RP = ₹0.25 via AU Rewardz", "₹99 + GST fee per redemption"],
+    other: [
+      "BRR/MRR not modeled — this card was added to the stack after the original category-rate model was built",
+      "1% fuel surcharge waiver, ₹400–5,000, monthly cap ₹200–250 (sources vary)"
+    ]
+  },
+  "amex-platinum": {
+    name: "AmEx Platinum Travel", role: "Travel Rewards", fee: "₹5,000 + GST (~₹5,900)", feeClass:"fee",
+    milestones: [
+      "₹1.9L annual spend → 7,500 bonus MR points",
+      "₹4L annual spend → 10,000 bonus MR points",
+      "₹7L annual spend → 22,500 bonus MR points + ₹10,000 Taj Experiences e-Gift Card (restructured 9 Mar 2026)",
+      "Only the first tranche of points auto-credits at each tier; the remainder needs a call/chat to Amex to claim manually",
+      "⚠ No formal spend-based fee waiver exists. Discretionary retention offers are sometimes available by calling Amex close to renewal — more commonly reported around ₹7L+ annual spend, never guaranteed."
+    ],
+    benefits: [
+      "Base: 1 MR point per ₹50 spent",
+      "Up to 20% dining discounts at partner restaurants",
+      "0% convenience fee on fuel at HPCL under ₹5,000"
+    ],
+    lounge: [
+      "8 domestic visits/year, max 2/quarter, primary cardholder only",
+      "No complimentary international lounge access — Priority Pass membership fee (US$99) is waived, but each visit still costs a US$27–35 usage fee",
+      "⚠ No free guest visits — Priority Pass guests are charged in addition to the per-visit usage fee, regardless of the cardholder's own quota."
+    ],
+    forex: "3.5%",
+    insurance: ["⚠ Not prominently documented for this specific card (distinct from the Platinum Charge card) — treat as minimal/undocumented, low confidence."],
+    exclusions: ["No points on fuel, insurance, utilities, cash, or POS EMI conversion — but these still count toward milestone spend"],
+    redemption: [
+      "MR points transfer to Marriott Bonvoy, Hilton Honors, KrisFlyer, British Airways, Emirates, Qatar, Finnair, Asia Miles, Virgin, and others, mostly ~1:1",
+      "Cannot pool MR points with Gold/Platinum Charge collections"
+    ],
+    other: ["MR points never expire", "⚠ Currently paused for new applications in India (2026)."]
+  },
+  "sbi-simplysave": {
+    name: "SBI SimplySave", role: "Dining / Groceries", fee: "₹499 + GST", feeClass:"fee",
+    milestones: ["⚠ Fee waiver: reverses from year 2 onward on ₹1L annual spend in the preceding year."],
+    benefits: [
+      "10X accelerated Reward Points (10 RP per ₹150, ≈1.67% effective at ₹0.25/RP) on dining, movies, groceries, and departmental stores — this accelerated tier is the core value of the card",
+      "1 RP per ₹150 (≈0.17% effective) on all other spends"
+    ],
+    lounge: ["None — confirmed, no domestic or international lounge access on this card."],
+    forex: "3.5%",
+    insurance: ["None documented."],
+    exclusions: ["No points on fuel, rent, wallet loads, government payments, or cash advances"],
+    redemption: ["1 RP = ₹0.25, against outstanding balance or gift catalogue", "Valid 24 months", "₹99 redemption fee applies"],
+    other: ["1% fuel surcharge waiver, ₹500–3,000 range, max ₹100/cycle", "RuPay/UPI variant available", "Flexipay EMI on spends over ₹2,500"]
+  },
+  "axis-atlas": {
+    name: "Axis Atlas", role: "Travel (Premium)", fee: "₹5,000 + GST", feeClass:"fee",
+    milestones: [
+      "2,500 EDGE Miles at ₹3L annual spend",
+      "+2,500 at ₹7.5L",
+      "+5,000 at ₹15L",
+      "⚠ No formal fee-waiver mechanism exists — the ₹5,000+GST fee applies every renewal year regardless of spend."
+    ],
+    benefits: [
+      "5 EDGE Miles per ₹100 on travel (direct airline/hotel bookings, or the Travel EDGE portal), capped at ₹2L cumulative travel spend/month; accelerated travel miles further capped at 10,000/statement cycle per some sources",
+      "2 EDGE Miles per ₹100 on everything else, and on travel spend beyond the ₹2L/month cap",
+      "25% off up to ₹800 via EazyDiner (min ₹2,000, twice/month)",
+      "1% fuel surcharge waiver"
+    ],
+    lounge: [
+      "Silver (base): 8 domestic + 4 international lounge visits/year",
+      "Gold (₹7.5L annual spend): 12 domestic + 6 international, plus 2,500 bonus EDGE Miles",
+      "Platinum (₹15L annual spend): 18 domestic + 12 international, plus 5,000 bonus EDGE Miles",
+      "Tier spend excludes gold/jewellery, rent, wallet, government, insurance, fuel, utilities/telecom",
+      "⚠ Guest access: the tier quota (e.g. 4 intl visits at Silver) covers the primary cardholder AND guests TOGETHER from the same shared pool — no separate free-guest allowance on top of it. Better than HDFC/Amex in one sense (guests never billed extra) but worse in another (guests eat into your own quota)."
+    ],
+    forex: "3.5% + GST (≈4.13% effective)",
+    insurance: ["⚠ Sources conflict — CardInsider states no insurance; BankBazaar cites air accident + baggage cover. Unresolved; likely minimal or discontinued."],
+    exclusions: ["No EDGE Miles on gold/jewellery, rent, wallet, government, insurance, fuel, or utilities/telecom"],
+    redemption: [
+      "REMOVED (2 Apr 2026, zero notice): Accor Live Limitless, Marriott Bonvoy, Qatar Airways Privilege Club",
+      "ADDED at a devalued 2 EDGE Miles : 1 partner mile ratio: British Airways Avios, Vietnam Airlines LotusMiles, Finnair Plus",
+      "UNCHANGED at 1 EDGE Mile : 2 partner miles (Group A): Singapore KrisFlyer, Aeroplan (Air Canada), JAL Mileage Bank",
+      "Group B (intact): Flying Blue, Air India Maharaja Club, ITC Hotels, IHG One Rewards, Wyndham",
+      "⚠ For Accor specifically, no workaround remains on Axis — HSBC TravelOne is now the best Accor route in India (1:1, instant transfer).",
+      "Transfer caps: Group A 30,000 EDGE Miles/year; Group B 1,20,000/year; combined annual cap resets 1 January; ₹199+GST transfer fee per transfer"
+    ],
+    other: ["⚠ Not accepting new applications as of 2026 — existing cardholders retain full benefits."]
+  },
+  "hsbc-travelone": {
+    name: "HSBC TravelOne", role: "Travel + Hopper", fee: "₹4,999 + GST (~₹5,899)", feeClass:"fee",
+    milestones: [
+      "3,000 bonus RP on ₹1L spend within first 90 days",
+      "10,000 bonus RP on ₹12L annual spend (no category exclusions apply to this specific milestone calc)",
+      "⚠ Fee waiver: ₹8L annual spend."
+    ],
+    benefits: [
+      "Base: 2 RP per ₹100 on everything else, no cap",
+      "Track A — direct accelerated spend on flights, travel aggregators, and forex: 4 RP per ₹100, capped at 50,000 RP/month",
+      "Track B — HSBC \"Travel with Points\" portal bookings only (Hopper): Hotels 6X = 24 RP/₹100 → 24 Accor pts (1:1); Flights 4X = 16 RP/₹100 → 16 Accor pts (1:1); Car Rentals 2X = 4 RP/₹100 → 4 Accor pts. All three share a separate 18,000 RP/month cap, portal-specific only",
+      "Forex sits in Track A (50,000 RP/mo cap), not Track B",
+      "Up to 20% off duty-free at Adani airports, via the AdaniOne app/website",
+      "BOGO movie tickets (up to ₹200 off, 2×/month) via District by Zomato, promo HSBCTOMOV",
+      "Aggregator & partner discount codes — see Offers & Codes tab"
+    ],
+    lounge: [
+      "6 domestic + 4 international (LoungeKey) visits/year, no spend condition",
+      "New: 4 complimentary domestic chauffeur airport transfers/year (1/quarter), via Ecos Mobility, valid through Dec 2026",
+      "⚠ No free guest visits — HSBC TravelOne's lounge program does not include guest access at all, complimentary or paid."
+    ],
+    forex: "3.5% (DCC also 3.5%); foreign-currency spend earns the accelerated 4 RP/₹100 under Track A",
+    insurance: ["Purchase protection up to USD 20,000/year (Tata AIG / Mastercard)"],
+    exclusions: ["No points on fuel, rent, utilities, insurance, education, government/tax, gold/jewellery, e-wallet loads, money transfers, cash advances — most still count toward the ₹8L fee-waiver threshold"],
+    redemption: [
+      "~20 partners, mostly 1:1 — Air India, KrisFlyer, British Airways, Qatar, Etihad, Air France-KLM, JAL, Thai, Turkish, United, Qantas, Vietnam Airlines, EVA Air, Hainan (AirAsia is the exception at 1:3)",
+      "Hotels: Accor ALL retained at 1:1 (now the best Accor route in India post-Atlas devaluation), IHG, Marriott Bonvoy, Wyndham, Shangri-La (5:1)"
+    ],
+    other: ["Nothing notable beyond the standard structure."]
+  }
+};
+
+const CARD_ORDER = ["amex-mrcc","regalia-gold","tata-neu","swiggy","onecard","amazon-pay","au-xcite","amex-platinum","sbi-simplysave","axis-atlas","hsbc-travelone"];
+
+const CATEGORIES = [
+  {key:"groceries", label:"Groceries", emoji:"🛒"},
+  {key:"food-delivery", label:"Food Delivery", emoji:"🍱"},
+  {key:"dining", label:"Dining", emoji:"🍽️"},
+  {key:"online-shopping", label:"Online Shopping", emoji:"🛍️"},
+  {key:"lifestyle", label:"Lifestyle Brands", emoji:"👗"},
+  {key:"utilities", label:"Utilities / Bills", emoji:"⚡"},
+  {key:"fuel", label:"Fuel", emoji:"⛽"},
+  {key:"upi", label:"UPI Payments", emoji:"📲"},
+  {key:"flights", label:"Flights", emoji:"✈️"},
+  {key:"hotels", label:"Hotels", emoji:"🏨"},
+  {key:"forex", label:"International / Forex", emoji:"💱"},
+  {key:"insurance", label:"Insurance", emoji:"🛡️"},
+  {key:"rent", label:"Rent", emoji:"🏠"},
+  {key:"movies", label:"Movies / Entertainment", emoji:"🎬"},
+  {key:"tata", label:"Tata Outlets", emoji:"🔵"}
+];
+
+// row: [cardKey, variant, brrStr, mrrStr, cap, note]
+const CATEGORY_DATA = {
+  groceries: [
+    ["tata-neu","via Tata Neu app","10.00%","10.00%","2,000 NeuCoins/mo (grocery-specific cap)","5% card + 5% NeuPass stacked"],
+    ["swiggy","via Instamart","10.00%","10.00%","₹1,500/mo; min ₹249/txn (from 17-Apr-2026)","10% CB"],
+    ["axis-atlas","—","4.30%","7.60%","—","2 Edge Miles/₹100 general retail. For Asia/Qatar-adjacent trips, JAL Mileage Bank may do better (~13.2% MRR) — single worked example, verify availability. [medium confidence]"],
+    ["amazon-pay","via Amazon.in","5.00%","5.00%","—","5% CB"],
+    ["hsbc-travelone","—","0.50%","4.00%","—","2 RP/₹100; MRR via Accor (1:1)"],
+    ["regalia-gold","—","1.25%","2.50%","—","2.5 RP/₹100 base (post 15-May-2026 cut); MRR via Accor (2RP→1 Accor pt→₹2)"],
+    ["sbi-simplysave","—","1.67%","1.67%","—","6.67 RP/₹100 on groceries"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"]
+  ],
+  "food-delivery": [
+    ["swiggy","Food orders + Genie","10.00%","10.00%","₹1,500/mo; min ₹249/txn","10% CB"],
+    ["axis-atlas","—","4.30%","7.60%","—","2 Edge Miles/₹100. For Asia/Qatar-adjacent trips, JAL Mileage Bank may do better (~13.2% MRR) — single worked example, verify availability. [medium confidence]"],
+    ["hsbc-travelone","—","0.50%","4.00%","—","2 RP/₹100; MRR via Accor (1:1)"],
+    ["regalia-gold","—","1.25%","2.50%","—","2.5 RP/₹100 base (post 15-May-2026 cut); MRR via Accor (2RP→1 Accor pt→₹2)"],
+    ["amazon-pay","via Amazon Pay partners","2.00%","2.00%","—","2% CB (Swiggy/Zomato as Amazon Pay partner)"],
+    ["tata-neu","—","1.50%","1.50%","—","1.5% CB — direct, no transfer"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"],
+    ["sbi-simplysave","—","0.17%","0.17%","—","0.67 RP/₹100"]
+  ],
+  dining: [
+    ["swiggy","via Dineout","10.00%","10.00%","₹1,500/mo; min ₹249/txn","10% CB — Dineout is part of the main Swiggy 10% bucket"],
+    ["axis-atlas","—","4.30%","7.60%","—","2 Edge Miles/₹100. For Asia/Qatar-adjacent trips, JAL Mileage Bank may do better (~13.2% MRR) — single worked example, verify availability. [medium confidence]"],
+    ["hsbc-travelone","—","0.50%","4.00%","—","2 RP/₹100; MRR via Accor (1:1)"],
+    ["regalia-gold","—","1.25%","2.50%","—","2.5 RP/₹100 base (post 15-May-2026 cut); MRR via Accor (2RP→1 Accor pt→₹2)"],
+    ["sbi-simplysave","—","1.67%","1.67%","—","6.67 RP/₹100 — dining"],
+    ["tata-neu","—","1.50%","1.50%","—","1.5% CB — direct, no transfer"],
+    ["amazon-pay","—","1.00%","1.00%","—","1% CB on other spends"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"]
+  ],
+  "online-shopping": [
+    ["axis-atlas","—","4.30%","7.60%","—","2 Edge Miles/₹100. For Asia/Qatar-adjacent trips, JAL Mileage Bank may do better (~13.2% MRR) — single worked example, verify availability. [medium confidence]"],
+    ["swiggy","—","5.00%","5.00%","₹1,500/mo; min ₹100/txn","Amazon, Flipkart, Myntra, Nykaa, Ajio, Cleartrip, BookMyShow, Uber, PharmEasy, Croma, Vijay Sales, Reliance Digital, Netflix, SonyLiv, Paytm Travel, Ixigo, Yatra, EaseMyTrip, Goibibo, Ola, Zoom"],
+    ["hsbc-travelone","—","0.50%","4.00%","—","2 RP/₹100; MRR via Accor (1:1)"],
+    ["regalia-gold","—","1.25%","2.50%","—","2.5 RP/₹100 base (post 15-May-2026 cut); MRR via Accor (2RP→1 Accor pt→₹2)"],
+    ["tata-neu","—","1.50%","1.50%","—","1.5% CB — direct, no transfer"],
+    ["amazon-pay","—","1.00%","1.00%","—","1% CB on other spends"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"],
+    ["sbi-simplysave","—","0.17%","0.17%","—","0.67 RP/₹100"]
+  ],
+  lifestyle: [
+    ["regalia-gold","—","6.67%","13.33%","5,000 pts/mo across all 4 brands","Myntra, M&S, Reliance Digital, Nykaa (5X) — unaffected by May-2026 base-rate cut"],
+    ["axis-atlas","—","4.30%","7.60%","—","2 Edge Miles/₹100. For Asia/Qatar-adjacent trips, JAL Mileage Bank may do better (~13.2% MRR) — single worked example, verify availability. [medium confidence]"],
+    ["swiggy","—","5.00%","5.00%","₹1,500/mo","Same 5% bucket as Online Shopping (Myntra, Nykaa overlap)"],
+    ["hsbc-travelone","—","0.50%","4.00%","—","2 RP/₹100; MRR via Accor (1:1)"],
+    ["tata-neu","—","1.50%","1.50%","—","1.5% CB — direct, no transfer"],
+    ["amazon-pay","—","1.00%","1.00%","—","1% CB on other spends"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"],
+    ["sbi-simplysave","—","0.17%","0.17%","—","0.67 RP/₹100"]
+  ],
+  utilities: [
+    ["tata-neu","—","5.00%","5.00%","2,000 NeuCoins/mo","5% NeuCoins on utility bill payments"],
+    ["regalia-gold","—","1.25%","2.50%","—","2.5 RP/₹100 base (post 15-May-2026 cut); MRR via Accor (2RP→1 Accor pt→₹2) — utilities not excluded"],
+    ["amazon-pay","via Amazon Pay partner","2.00%","2.00%","—","2% CB"],
+    ["swiggy","—","1.00%","1.00%","₹500/month cap","1% CB on other spends"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"],
+    ["sbi-simplysave","—","0.17%","0.17%","—","0.67 RP/₹100"],
+    ["amex-platinum","—","Excluded","Excluded","—","Excluded — no points, but counts toward milestone"],
+    ["amex-mrcc","—","Excluded","Excluded","—","Excluded — no points, but counts toward milestone"],
+    ["axis-atlas","—","Excluded","Excluded","—","Excluded — Utilities & Telecom (1% fee applies above ₹25,000/mo)"],
+    ["hsbc-travelone","—","Excluded","Excluded","—","Excluded — no reward points on utilities"]
+  ],
+  fuel: [
+    ["amex-platinum","—","0.00%","0.00%","—","0% conv. fee at HPCL <₹5,000/txn (1% ≥₹5,000) — no points, but counts toward the ₹1.9L/₹4L/₹7L annual milestone"],
+    ["amex-mrcc","—","0.00%","0.00%","—","0% conv. fee at HPCL up to ₹25,000/txn. Boost trick: exactly 4 transactions of ₹1,500 (₹6,000 total) in a month triggers the milestone → effective 4.17% BRR / 8.33% MRR on that spend pattern only."],
+    ["sbi-simplysave","—","0.00%","0.00%","—","1% surcharge waived (₹500–₹3,000 txns), cap ₹100/mo — no RP earned"],
+    ["tata-neu","—","0.00%","0.00%","—","1% surcharge waived (₹400–₹5,000 txns), cap ₹500/cycle — no NeuCoins (explicitly excluded)"],
+    ["hsbc-travelone","—","0.00%","0.00%","—","1% surcharge waived up to ₹250 (₹400–₹5,000 txns) — no RP earned"],
+    ["regalia-gold","—","−1.00%","−1.00%","—","No waiver found — standard ~1% surcharge likely applies, no points [medium confidence]"],
+    ["amazon-pay","—","−1.00%","−1.00%","—","No waiver found — standard ~1% surcharge likely applies, no CB [medium confidence]"],
+    ["swiggy","—","−1.00%","−1.00%","—","Explicitly excluded from rewards; no waiver found — standard ~1% surcharge likely applies [medium confidence]"],
+    ["onecard","—","−1.00%","−1.00%","—","Confirmed: 1% surcharge applies, no waiver, no RP — genuine net loss"],
+    ["axis-atlas","—","Excluded","Excluded","—","Unconfirmed — terms reference a fuel surcharge waiver (implying one exists) but exact %/cap not verifiable. Treat as ~0% pending confirmation, not negative. [low confidence]"]
+  ],
+  upi: [
+    ["tata-neu","—","1.50%","1.50%","500 NeuCoins/mo combined — does NOT apply to fuel","0.5% on any UPI (RuPay variant) + 1% extra via Tata Neu UPI ID = 1.5% combined"],
+    ["amex-platinum","—","Excluded","Excluded","—","AmEx network — not RuPay/UPI-linked"],
+    ["amex-mrcc","—","Excluded","Excluded","—","AmEx network — not RuPay/UPI-linked"],
+    ["regalia-gold","—","Excluded","Excluded","—","Visa/Mastercard — verify if your specific card is RuPay-linked"],
+    ["swiggy","—","Excluded","Excluded","—","Verify if your specific card is RuPay-linked"],
+    ["onecard","—","Excluded","Excluded","—","Verify if your specific card is RuPay-linked"],
+    ["sbi-simplysave","—","Excluded","Excluded","—","Verify if your specific card is RuPay-linked"],
+    ["axis-atlas","—","Excluded","Excluded","—","Visa/Mastercard — not RuPay-linked"],
+    ["hsbc-travelone","—","Excluded","Excluded","—","Mastercard World — not RuPay-linked"],
+    ["amazon-pay","—","Excluded","Excluded","—","Verify if your specific card is RuPay-linked"]
+  ],
+  flights: [
+    ["hsbc-travelone","Hopper portal","4.00%","32.00%","18,000 RP/mo Hopper-specific (~₹1.12L/mo)","4X base = 16 RP/₹100, transfer to Accor"],
+    ["hsbc-travelone","Aggregator + cash discount","15.85%","21.80%","50,000 RP/mo shared accelerated cap","~15% instant discount (Yatra/EMT/Goibibo/Cleartrip/MMT/Paytm) + 4RP/₹100 on the discounted amount → Accor. Emirates is 10%, capped per-partner (typically ₹3,000–5,000)"],
+    ["axis-atlas","Direct / Edge Portal","10.75%","19.00%","₹2L/month earn cap","5 Edge Miles/₹100 — direct airline booking or Axis Edge portal (NOT aggregators). For Asia/Qatar-adjacent trips, JAL Mileage Bank may do better (~33.1% MRR) — single worked example, verify availability. [medium confidence]"],
+    ["regalia-gold","SmartBuy (5X)","6.25%","12.50%","2,000 pts/day, 4,000 pts/month SmartBuy cap","12.5 RP/₹100 (5X of 2.5 base), transfer to Accor"],
+    ["swiggy","via Cleartrip","10.70%","10.70%","₹1,500/billing cycle","Flat 6% instant discount + 5% cashback on the discounted amount"],
+    ["axis-atlas","Aggregator (no 5X)","4.30%","7.60%","—","Aggregator bookings do NOT qualify for Atlas 5X — base 2 Edge Miles/₹100 only. [medium confidence]"],
+    ["tata-neu","—","1.50%","1.50%","—","1.5% CB — direct, no transfer"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amazon-pay","—","1.00%","1.00%","—","1% CB on other spends"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"],
+    ["sbi-simplysave","—","0.17%","0.17%","—","0.67 RP/₹100"]
+  ],
+  hotels: [
+    ["hsbc-travelone","Hopper portal","6.00%","48.00%","18,000 RP/mo Hopper-specific (~₹1.12L/mo)","6X base = 24 RP/₹100, transfer to Accor — PEAK RETURN IN ENTIRE STACK"],
+    ["regalia-gold","SmartBuy (10X)","12.50%","25.00%","2,000 pts/day, 4,000 pts/month SmartBuy cap","25 RP/₹100 (10X of 2.5 base), transfer to Accor"],
+    ["swiggy","via Cleartrip","23.05%","23.05%","₹1,500/billing cycle","Flat 19% instant discount + 5% cashback on the discounted amount"],
+    ["hsbc-travelone","Aggregator/OTA + cash discount","15.85%","21.80%","50,000 RP/mo shared accelerated cap","~15% instant discount (most OTAs) + 4RP/₹100 on the discounted amount → Accor. StayVista specifically is 11% discount, hotel-only, max 2 bookings/yr"],
+    ["axis-atlas","Direct / Edge Portal","10.75%","19.00%","₹2L/month earn cap","5 Edge Miles/₹100 — direct hotel booking or Axis Edge portal. [medium confidence]"],
+    ["axis-atlas","OTA (no 5X)","4.30%","7.60%","—","OTA bookings do NOT qualify for Atlas 5X — base 2 Edge Miles/₹100 only. [medium confidence]"],
+    ["tata-neu","—","1.50%","1.50%","—","1.5% CB — direct, no transfer"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amazon-pay","—","1.00%","1.00%","—","1% CB on other spends"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"],
+    ["sbi-simplysave","—","0.17%","0.17%","—","0.67 RP/₹100"]
+  ],
+  forex: [
+    ["hsbc-travelone","—","−2.50%","4.50%","50,000 RP/mo accelerated cap shared with general","4 RP/₹100 forex (8% MRR via Accor) net of 3.5% markup. Promo forex-cashback (SMS HSBCFX) assumed NOT active — verify if running."],
+    ["axis-atlas","KrisFlyer/Aeroplan avg","0.80%","4.10%","—","2 Edge Miles/₹100 (avg KrisFlyer/Aeroplan) net of 3.5% forex markup. [medium confidence]"],
+    ["regalia-gold","—","0.25%","1.50%","—","2.5 RP/₹100 (MRR via Accor) net of 1% effective markup — GVP active"],
+    ["tata-neu","—","−0.50%","−0.50%","—","1.5% CB net of 2% markup — GVP also available on this HDFC card if activated"],
+    ["onecard","—","−0.80%","−0.80%","—","0.2% reward net of 1% markup — lowest gross markup in stack but still a net cost"],
+    ["amazon-pay","—","−0.99%","−0.99%","—","1% CB net of ~1.99% markup"],
+    ["swiggy","—","−2.50%","−2.50%","—","1% CB net of 3.5% markup"],
+    ["amex-mrcc","—","−3.00%","−2.50%","—","Net of 3.5% markup"],
+    ["amex-platinum","—","−3.00%","−2.50%","—","Net of 3.5% markup"],
+    ["sbi-simplysave","—","−3.33%","−3.33%","—","0.67 RP/₹100 net of 3.5% markup — worst in stack"]
+  ],
+  insurance: [
+    ["tata-neu","—","5.00%","5.00%","2,000 NeuCoins/month","5% NeuCoins — note HDFC T&Cs are internally inconsistent here; verify from actual postings"],
+    ["regalia-gold","—","1.25%","2.50%","—","2.5 RP/₹100 base (post 15-May-2026 cut); MRR via Accor — insurance not excluded"],
+    ["amazon-pay","—","1.00%","1.00%","—","1% CB on other spends"],
+    ["swiggy","—","1.00%","1.00%","₹500/month cap","1% CB on other spends"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"],
+    ["sbi-simplysave","—","0.17%","0.17%","—","0.67 RP/₹100"],
+    ["amex-platinum","—","Excluded","Excluded","—","Excluded — no points, but counts toward milestone"],
+    ["amex-mrcc","—","Excluded","Excluded","—","Excluded — no points, but counts toward milestone"],
+    ["axis-atlas","—","Excluded","Excluded","—","Excluded"],
+    ["hsbc-travelone","—","Excluded","Excluded","—","Confirmed excluded — no reward points on insurance"]
+  ],
+  rent: [
+    ["amex-platinum","—","Excluded","Excluded","—","Excluded"],
+    ["amex-mrcc","—","Excluded","Excluded","—","Excluded"],
+    ["regalia-gold","—","Excluded","Excluded","—","Excluded"],
+    ["tata-neu","—","Excluded","Excluded","—","Excluded"],
+    ["swiggy","—","Excluded","Excluded","—","Excluded"],
+    ["onecard","—","Excluded","Excluded","—","Excluded (quasi-cash)"],
+    ["sbi-simplysave","—","Excluded","Excluded","—","Excluded"],
+    ["axis-atlas","—","Excluded","Excluded","—","Excluded"],
+    ["hsbc-travelone","—","Excluded","Excluded","—","Excluded"],
+    ["amazon-pay","—","Excluded","Excluded","—","Excluded"]
+  ],
+  movies: [
+    ["axis-atlas","—","4.30%","7.60%","—","2 Edge Miles/₹100. [medium confidence]"],
+    ["swiggy","—","5.00%","5.00%","₹1,500/mo","BookMyShow via the Online Shopping 5% bucket"],
+    ["hsbc-travelone","—","0.50%","4.00%","—","2 RP/₹100 base. Plus: BOGO movie ticket up to ₹200 off, 2x/month, via District app, promo HSBCTOMOV"],
+    ["regalia-gold","—","1.25%","2.50%","—","2.5 RP/₹100 base (post 15-May-2026 cut); MRR via Accor"],
+    ["amazon-pay","via Amazon Pay partner","2.00%","2.00%","—","2% CB (BookMyShow)"],
+    ["sbi-simplysave","—","1.67%","1.67%","—","6.67 RP/₹100 — movies"],
+    ["tata-neu","—","1.50%","1.50%","—","1.5% CB — direct, no transfer"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"]
+  ],
+  tata: [
+    ["tata-neu","via Tata Neu app + NeuPass","10.00%","10.00%","No explicit cap found for this bucket specifically — verify","5% card + 5% NeuPass stacked"],
+    ["axis-atlas","—","4.30%","7.60%","—","2 Edge Miles/₹100. [medium confidence]"],
+    ["tata-neu","Offline at Tata stores","5.00%","5.00%","—","5% card rate only — NeuPass boost requires the app"],
+    ["swiggy","—","5.00%","5.00%","₹1,500/mo","Croma, Westside etc. via Online Shopping bucket"],
+    ["hsbc-travelone","—","0.50%","4.00%","—","2 RP/₹100; MRR via Accor (1:1)"],
+    ["regalia-gold","—","1.25%","2.50%","—","2.5 RP/₹100 base (post 15-May-2026 cut); MRR via Accor"],
+    ["amazon-pay","—","1.00%","1.00%","—","1% CB on other spends"],
+    ["amex-platinum","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["amex-mrcc","—","0.50%","1.00%","—","2 MR/₹100; MRR via Marriott Bonvoy (1:1)"],
+    ["onecard","—","0.20%","0.20%","—","2 RP/₹100 × ₹0.10 — no transfer"],
+    ["sbi-simplysave","—","0.17%","0.17%","—","0.67 RP/₹100"]
+  ]
+};
+
+// AU Xcite Ultra intentionally has no category rows (not modeled in source data).
+
+const HSBC_OFFERS = [
+  ["Yatra","YATRAHSBC","15% off (max ₹3,000)","15% off (max ₹5,000)","12% off domestic (max ₹7,500); no intl hotel discount","31 Mar 2026","Once per card/category/month"],
+  ["EaseMyTrip","EMTHSBCT1","15% off flights & hotels (max ₹3,000 total)","15% off (max ₹5,000)","Included in domestic combo","31 Dec 2026","Twice per card/product/year"],
+  ["Goibibo","GOHSBCTRAVEL1","15% off (max ₹3,000)","15% off (max ₹5,000)","Flights, hotels & homestays","31 Mar 2026","Not published — verify"],
+  ["Cleartrip","CTHSBCTRAVELONE","15% off (max ₹3,000)","15% off (max ₹5,000)","—","Ongoing — verify","Not published — verify"],
+  ["MakeMyTrip","No code needed","15% off (max ₹3,000)","15% off (max ₹5,000)","—","31 Mar 2026","Not published — verify"],
+  ["Paytm","HSBCTRAVEL1","15% off flights (max ₹5,000 total)","included","No hotel discount","31 Mar 2026","Not published — verify"],
+  ["Emirates","INHSBC1","—","10% off intl flights only (max ₹12,000)","—","30 Apr 2026","Not published — verify"],
+  ["StayVista","No code needed","—","—","11% off (max ₹3,000/booking)","Ongoing","Max 2 bookings/card/year"]
+];
+
+const FEE_WAIVERS = [
+  ["AU Xcite Ultra","Lifetime Free (stack status)","Official bank page: ₹749+GST with ₹2L spend waiver from year 2 — but treated as LTF for this stack per confirmed actual status."],
+  ["AmEx Platinum Travel","₹5,000 + GST","No formal spend-based waiver. Discretionary retention offers sometimes available near renewal, more common around ₹7L+ annual spend — never guaranteed."],
+  ["SBI SimplySave","₹499 + GST","Waiver reverses from year 2 onward on ₹1L annual spend in the preceding year."],
+  ["Axis Atlas","₹5,000 + GST","No waiver mechanism exists — fee applies every renewal year regardless of spend."],
+  ["HSBC TravelOne","₹4,999 + GST","Waived on ₹8L annual spend."]
+];
+
+const GAPS = [
+  ["AU Xcite Ultra fee status","Official AU Bank page states ₹749+GST annual fee with a ₹2L spend waiver from year 2. Treated as Lifetime Free throughout this document per confirmed actual status for this cardholder, not the published bank terms."],
+  ["AU Xcite Ultra insurance","Official AU page states ₹20 lakh air accident cover; several review sites (CardInsider, Pluto Money) repeat ₹50 lakh instead. Official page treated as authoritative."],
+  ["AU Xcite Ultra monthly RP cap","A figure of 25,000 RP/month appeared only in an unverified review comment thread and was deliberately dropped rather than included as fact."],
+  ["AU Xcite Ultra BRR/MRR","Not modeled in the original category-rate data at all (card was added to the stack after that model was built)."],
+  ["AmEx MRCC & AmEx Platinum Travel insurance","Not prominently documented for either card specifically (distinct from the Amex Platinum Charge card, which has extensive published cover). Treated as minimal/undocumented, low confidence."],
+  ["AmEx Platinum Travel fee waiver","No formal spend-based waiver exists. Discretionary retention offers sometimes available by calling customer care close to renewal — more commonly reported around ₹7L+ annual spend, but never guaranteed."],
+  ["Axis Atlas insurance","Sources conflict: CardInsider states no insurance exists; BankBazaar cites air accident + baggage cover. Unresolved; likely minimal or discontinued."],
+  ["Axis Atlas guest lounge access","The tier-based visit quota covers the primary cardholder AND accompanying guests TOGETHER, from the same shared pool — no separate free-guest allowance on top. Differs from HDFC/Amex's Priority Pass model, where guests are always billed separately. Some sites conflate this with Axis Reserve/Magnus, which do carry a separate guest program — that figure does not apply to Atlas."],
+  ["HSBC TravelOne accelerated points cap","Resolved as two separate tracks. Track A (direct spend on flights/aggregators/forex, 4 RP/₹100) is capped at 50,000 RP/month. Track B (Hopper portal only, 6X hotels/4X flights) is capped separately at 18,000 RP/month, portal-specific only. Forex sits in Track A, not Track B — confirmed correct by the cardholder."],
+  ["HSBC TravelOne aggregator usage frequency","Yatra (once/card/category/month) and EaseMyTrip (twice/card/product/year) have confirmed limits from HSBC's own terms. Goibibo, Cleartrip, MakeMyTrip, Paytm, and Emirates do not have a published frequency limit — flagged as 'check current T&Cs' rather than assumed unlimited."],
+  ["HDFC Swiggy minimum transaction for 10% cashback","₹249 (effective 17 April 2026) is used throughout, sourced from a dedicated update article specific to this legacy card variant. HDFC's own general product page still showed ₹100 as of a 1 July 2026 refresh — the ₹249 figure was confirmed correct by the cardholder."],
+  ["No card in this stack offers free/complimentary guest lounge visits.","Priority Pass-based cards (Amex Platinum Travel, Regalia Gold, Tata Neu Infinity) charge guests US$27+GST per visit regardless of the cardholder's own quota. HSBC TravelOne has no guest access at all. Axis Atlas guests draw from the shared tier quota rather than being charged separately — the closest thing to a 'guest benefit' in the stack, but not a free additional allowance."],
+  ["HDFC Regalia Gold Global Value Program (GVP)","Confirmed active as of 2026 (some older 2025 articles incorrectly flagged it as discontinued). ₹199+GST/year, gives 1% cashback on international/forex spend capped at ₹1,000/statement cycle, bringing the effective forex markup down from 2% to ~1%. Not retroactive — must be active before spending."]
+];
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function parsePct(str){
+  if(!str || str.indexOf("Excluded") !== -1) return null;
+  const cleaned = str.replace(/−/g,"-").replace("%","").trim();
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? null : n;
+}
+
+function fmtPct(str){
+  if(!str || str.indexOf("Excluded") !== -1) return '<span class="note">Excluded</span>';
+  const n = parsePct(str);
+  const cls = n < 0 ? "neg" : (n > 0 ? "pos" : "");
+  return '<span class="'+cls+'">'+str+'</span>';
+}
+
+/* =========================================================
+   RENDER: CATEGORY PICKER
+   ========================================================= */
+
+let currentCategory = null;
+let currentCardCatSort = "mrr";
+
+function renderCatGrid(filter){
+  const grid = document.getElementById("catGrid");
+  grid.innerHTML = "";
+  CATEGORIES.filter(c => !filter || c.label.toLowerCase().includes(filter.toLowerCase())).forEach(c => {
+    const btn = document.createElement("div");
+    btn.className = "cat-btn" + (currentCategory === c.key ? " active" : "");
+    btn.innerHTML = '<span class="emoji">'+c.emoji+'</span>'+c.label;
+    btn.onclick = () => { currentCategory = c.key; renderCatGrid(document.getElementById("catSearch").value); renderCatResult(); };
+    grid.appendChild(btn);
+  });
+}
+
+function renderCatResult(){
+  const el = document.getElementById("catResult");
+  if(!currentCategory){
+    el.innerHTML = '<div class="empty-state">Pick a category above to see every card ranked by reward rate.</div>';
+    return;
+  }
+  const cat = CATEGORIES.find(c => c.key === currentCategory);
+  let rows = CATEGORY_DATA[currentCategory].slice();
+  rows.sort((a,b) => {
+    const av = parsePct(a[currentCardCatSort === "mrr" ? 3 : 2]);
+    const bv = parsePct(b[currentCardCatSort === "mrr" ? 3 : 2]);
+    if(av === null) return 1;
+    if(bv === null) return -1;
+    return bv - av;
+  });
+  const bestVal = rows.length ? parsePct(rows[0][currentCardCatSort === "mrr" ? 3 : 2]) : null;
+
+  let html = '<h2>'+cat.emoji+' '+cat.label+'</h2>';
+  html += '<div class="sort-row">Sort by: <select id="catSortSelect"><option value="mrr"'+(currentCardCatSort==="mrr"?" selected":"")+'>MRR (best achievable)</option><option value="brr"'+(currentCardCatSort==="brr"?" selected":"")+'>BRR (realistic)</option></select></div>';
+  html += '<div style="overflow-x:auto;"><table><thead><tr><th>Card</th><th>Variant</th><th>BRR</th><th>MRR</th><th>Cap</th><th>Note</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    const [cardKey, variant, brr, mrr, cap, note] = r;
+    const val = parsePct(currentCardCatSort === "mrr" ? mrr : brr);
+    const isBest = bestVal !== null && val === bestVal;
+    html += '<tr class="'+(isBest?"best":"")+'">';
+    html += '<td>'+CARDS[cardKey].name+'</td>';
+    html += '<td class="note">'+variant+'</td>';
+    html += '<td class="num">'+fmtPct(brr)+'</td>';
+    html += '<td class="num">'+fmtPct(mrr)+'</td>';
+    html += '<td class="note">'+cap+'</td>';
+    html += '<td class="note">'+note+'</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  if(currentCategory === "tata"){
+    html += '<p class="note" style="margin-top:12px;">AU Xcite Ultra has no category-rate data available — added to the stack after the original model was built.</p>';
+  }
+  el.innerHTML = html;
+
+  document.getElementById("catSortSelect").onchange = (e) => {
+    currentCardCatSort = e.target.value;
+    renderCatResult();
+  };
+}
+
+document.getElementById("catSearch").addEventListener("input", (e) => renderCatGrid(e.target.value));
+
+/* =========================================================
+   RENDER: CARD DETAIL
+   ========================================================= */
+
+let currentCard = null;
+
+function renderCardPicker(){
+  const wrap = document.getElementById("cardPicker");
+  wrap.innerHTML = "";
+  CARD_ORDER.forEach(key => {
+    const c = CARDS[key];
+    const chip = document.createElement("div");
+    chip.className = "card-chip" + (currentCard === key ? " active" : "");
+    chip.innerHTML = '<span class="dot '+c.feeClass+'"></span>'+c.name;
+    chip.onclick = () => { currentCard = key; renderCardPicker(); renderCardResult(); };
+    wrap.appendChild(chip);
+  });
+}
+
+function listSection(title, arr){
+  if(!arr || !arr.length) return "";
+  return '<h3>'+title+'</h3><ul class="clean">'+arr.map(x=>'<li>'+x+'</li>').join("")+'</ul>';
+}
+
+function renderCardResult(){
+  const el = document.getElementById("cardResult");
+  if(!currentCard){
+    el.innerHTML = '<div class="empty-state">Pick a card above to see its full profile and category rankings.</div>';
+    return;
+  }
+  const c = CARDS[currentCard];
+  let html = '<h2>'+c.name+' <span class="badge '+c.feeClass+'">'+c.fee+'</span></h2>';
+  html += '<p class="note">Role: '+c.role+'</p>';
+  html += listSection("Milestones", c.milestones);
+  html += listSection("Benefits", c.benefits);
+  html += listSection("Lounge Access", c.lounge);
+  html += '<h3>Forex Markup</h3><p style="font-size:0.9rem;">'+c.forex+'</p>';
+  html += listSection("Insurance", c.insurance);
+  html += listSection("Category Exclusions", c.exclusions);
+  html += listSection("Redemption & Transfer", c.redemption);
+  html += listSection("Other Notable Terms", c.other);
+
+  // Build category ranking for this card
+  const catRows = [];
+  CATEGORIES.forEach(cat => {
+    const rows = CATEGORY_DATA[cat.key] || [];
+    rows.filter(r => r[0] === currentCard).forEach(r => {
+      catRows.push({cat, variant:r[1], brr:r[2], mrr:r[3], cap:r[4], note:r[5]});
+    });
+  });
+  catRows.sort((a,b) => {
+    const av = parsePct(a.mrr), bv = parsePct(b.mrr);
+    if(av === null) return 1;
+    if(bv === null) return -1;
+    return bv - av;
+  });
+
+  html += '<h3>BRR / MRR by Category</h3>';
+  if(!catRows.length){
+    html += '<p class="note">No BRR/MRR category data available for this card — not modeled in the original data set.</p>';
+  } else {
+    html += '<div style="overflow-x:auto;"><table><thead><tr><th>Category</th><th>Variant</th><th>BRR</th><th>MRR</th><th>Cap</th><th>Note</th></tr></thead><tbody>';
+    catRows.forEach(r => {
+      html += '<tr>';
+      html += '<td>'+r.cat.emoji+' '+r.cat.label+'</td>';
+      html += '<td class="note">'+r.variant+'</td>';
+      html += '<td class="num">'+fmtPct(r.brr)+'</td>';
+      html += '<td class="num">'+fmtPct(r.mrr)+'</td>';
+      html += '<td class="note">'+r.cap+'</td>';
+      html += '<td class="note">'+r.note+'</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+/* =========================================================
+   RENDER: OFFERS
+   ========================================================= */
+
+let liveOffersLoaded = false;
+let liveOffersLoading = false;
+let liveOffersCache = null;
+
+function escapeHtml(value){
+  return String(value == null ? "" : value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function formatScanTime(value){
+  if(!value) return "Not scanned yet.";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return value;
+  return "Last scanned: " + date.toLocaleString("en-IN", {
+    dateStyle:"medium",
+    timeStyle:"short"
+  });
+}
+
+function renderLiveOffers(data, message){
+  const body = document.getElementById("liveOffersBody");
+  const meta = document.getElementById("liveOffersMeta");
+  const refreshBtn = document.getElementById("refreshOffersBtn");
+  if(!body || !meta || !refreshBtn) return;
+
+  refreshBtn.disabled = liveOffersLoading;
+  refreshBtn.textContent = liveOffersLoading ? "Refreshing..." : "Refresh Now";
+
+  if(message){
+    meta.textContent = message;
+  } else {
+    meta.textContent = formatScanTime(data && data.meta && data.meta.scannedAt);
+  }
+
+  if(liveOffersLoading && !data){
+    body.className = "empty-state";
+    body.innerHTML = "Checking the latest saved offers...";
+    return;
+  }
+
+  const results = data && data.results ? data.results : [];
+  if(!results.length){
+    body.className = "empty-state";
+    body.innerHTML = "No saved scan results yet. Use Refresh Now after deploying with API keys.";
+    return;
+  }
+
+  body.className = "offer-grid";
+  body.innerHTML = results.map(result => {
+    const offers = result.offers || [];
+    const status = result.status === "error"
+      ? '<p class="status-line">Scan error: '+escapeHtml(result.errorMessage || "Unknown error")+'</p>'
+      : '<p class="status-line">'+escapeHtml(offers.length ? offers.length + " current offer(s)" : "No current offers found")+'</p>';
+
+    const offerHtml = offers.map(offer => {
+      const confidence = escapeHtml(offer.confidence || "low");
+      const metaBits = [
+        offer.discountText ? '<span class="pill">'+escapeHtml(offer.discountText)+'</span>' : "",
+        offer.cap ? '<span class="pill">Cap: '+escapeHtml(offer.cap)+'</span>' : "",
+        offer.validTill ? '<span class="pill">Valid: '+escapeHtml(offer.validTill)+'</span>' : "",
+        '<span class="pill '+confidence+'">'+confidence+' confidence</span>'
+      ].join("");
+      return '<div style="margin-top:10px;">'
+        + '<h3>'+escapeHtml(offer.title)+'</h3>'
+        + '<p class="note">'+escapeHtml(offer.description)+'</p>'
+        + '<div class="offer-meta">'+metaBits+'</div>'
+        + '<details class="offer-source-toggle"><summary>Show source</summary><a href="'+escapeHtml(offer.sourceUrl)+'" target="_blank" rel="noopener">'+escapeHtml(offer.sourceUrl)+'</a></details>'
+        + '</div>';
+    }).join("");
+
+    return '<article class="offer-card">'
+      + '<h3>'+escapeHtml(result.cardName)+'</h3>'
+      + status
+      + offerHtml
+      + '</article>';
+  }).join("");
+}
+
+async function loadLiveOffers(force){
+  if(liveOffersLoading) return;
+  if(liveOffersLoaded && !force){
+    renderLiveOffers(liveOffersCache);
+    return;
+  }
+
+  liveOffersLoading = true;
+  renderLiveOffers(liveOffersCache);
+  try{
+    const response = await fetch("/.netlify/functions/get-offers", { cache:"no-store" });
+    if(!response.ok) throw new Error("Netlify function returned " + response.status);
+    liveOffersCache = await response.json();
+    liveOffersLoaded = true;
+    renderLiveOffers(liveOffersCache);
+  } catch(error){
+    renderLiveOffers(liveOffersCache, "Live functions are not available in this local/static preview yet.");
+  } finally {
+    liveOffersLoading = false;
+    renderLiveOffers(liveOffersCache);
+  }
+}
+
+async function refreshLiveOffers(){
+  if(liveOffersLoading) return;
+  liveOffersLoading = true;
+  renderLiveOffers(liveOffersCache, "Refreshing all cards. This can take a few seconds.");
+  try{
+    const response = await fetch("/.netlify/functions/refresh-now", {
+      method:"POST",
+      cache:"no-store"
+    });
+    if(!response.ok) throw new Error("Netlify function returned " + response.status);
+    const fresh = await response.json();
+    liveOffersCache = {
+      results:fresh.results || [],
+      meta:{
+        scannedAt:fresh.scannedAt,
+        cardCount:(fresh.results || []).length,
+        okCount:(fresh.results || []).filter(r => r.status === "ok" || r.status === "empty").length,
+        errorCount:(fresh.results || []).filter(r => r.status === "error").length
+      }
+    };
+    liveOffersLoaded = true;
+    renderLiveOffers(liveOffersCache);
+  } catch(error){
+    renderLiveOffers(liveOffersCache, "Refresh needs the deployed Netlify site plus valid Tavily and Gemini keys.");
+  } finally {
+    liveOffersLoading = false;
+    renderLiveOffers(liveOffersCache);
+  }
+}
+
+function renderOffers(){
+  const refreshBtn = document.getElementById("refreshOffersBtn");
+  if(refreshBtn){
+    refreshBtn.onclick = refreshLiveOffers;
+  }
+  renderLiveOffers(liveOffersCache);
+
+  const body = document.getElementById("hsbcOffersBody");
+  body.innerHTML = HSBC_OFFERS.map(o =>
+    '<tr><td>'+o[0]+'</td><td><span class="offer-code">'+o[1]+'</span></td><td class="note">'+o[2]+'</td><td class="note">'+o[3]+'</td><td class="note">'+o[4]+'</td><td class="note">'+o[5]+'</td><td class="note">'+o[6]+'</td></tr>'
+  ).join("");
+
+  const feeBody = document.getElementById("feeWaiverBody");
+  feeBody.innerHTML = FEE_WAIVERS.map(f =>
+    '<tr><td>'+f[0]+'</td><td class="note">'+f[1]+'</td><td class="note">'+f[2]+'</td></tr>'
+  ).join("");
+
+  const acc = document.getElementById("milestoneAccordion");
+  acc.innerHTML = CARD_ORDER.map(key => {
+    const c = CARDS[key];
+    return '<details><summary>'+c.name+'</summary><ul class="clean">'+c.milestones.map(m=>'<li>'+m+'</li>').join("")+'</ul></details>';
+  }).join("");
+}
+
+/* =========================================================
+   RENDER: GAPS
+   ========================================================= */
+
+function renderGaps(){
+  const el = document.getElementById("gapsList");
+  el.innerHTML = GAPS.map(g =>
+    '<div class="gap-item"><b>'+g[0]+'</b><br>'+g[1]+'</div>'
+  ).join("");
+}
+
+/* =========================================================
+   TAB SWITCHING
+   ========================================================= */
+
+document.querySelectorAll("nav.tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav.tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const view = btn.dataset.view;
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-"+view).classList.add("active");
+    if(view === "offers") loadLiveOffers(false);
+  });
+});
+
+/* =========================================================
+   INIT
+   ========================================================= */
+
+renderCatGrid();
+renderCardPicker();
+renderOffers();
+renderGaps();
+</script>
+
+</body>
+</html>
