@@ -1135,6 +1135,19 @@ function renderCardResult(){
 let liveOffersLoaded = false;
 let liveOffersLoading = false;
 let liveOffersCache = null;
+const LIVE_OFFER_CARD_IDS = [
+  "amex_pt",
+  "amex_mrcc",
+  "regalia",
+  "tata_neu",
+  "swiggy",
+  "au_xcite",
+  "onecard",
+  "amazon",
+  "sbi",
+  "atlas",
+  "hsbc"
+];
 
 function escapeHtml(value){
   return String(value == null ? "" : value)
@@ -1240,23 +1253,31 @@ async function loadLiveOffers(force){
 async function refreshLiveOffers(){
   if(liveOffersLoading) return;
   liveOffersLoading = true;
-  renderLiveOffers(liveOffersCache, "Refreshing all cards. This can take a few seconds.");
+  renderLiveOffers(liveOffersCache, "Refreshing 11 cards one by one. This can take about a minute.");
   try{
-    const response = await fetch("/.netlify/functions/refresh-now", {
-      method:"POST",
-      cache:"no-store"
-    });
-    if(!response.ok) throw new Error("Netlify function returned " + response.status);
-    const fresh = await response.json();
-    liveOffersCache = {
-      results:fresh.results || [],
-      meta:{
-        scannedAt:fresh.scannedAt,
-        cardCount:(fresh.results || []).length,
-        okCount:(fresh.results || []).filter(r => r.status === "ok" || r.status === "empty").length,
-        errorCount:(fresh.results || []).filter(r => r.status === "error").length
+    const working = liveOffersCache && liveOffersCache.results
+      ? { results: liveOffersCache.results.slice(), meta: liveOffersCache.meta || null }
+      : { results: [], meta: null };
+
+    for(let i = 0; i < LIVE_OFFER_CARD_IDS.length; i++){
+      const cardId = LIVE_OFFER_CARD_IDS[i];
+      renderLiveOffers(working, "Refreshing card " + (i + 1) + " of " + LIVE_OFFER_CARD_IDS.length + "...");
+      const response = await fetch("/.netlify/functions/refresh-card?cardId=" + encodeURIComponent(cardId), {
+        method:"POST",
+        cache:"no-store"
+      });
+      if(!response.ok) throw new Error("Netlify function returned " + response.status);
+      const fresh = await response.json();
+      const idx = working.results.findIndex(item => item.cardId === cardId);
+      if(idx === -1){
+        working.results.push(fresh.result);
+      } else {
+        working.results[idx] = fresh.result;
       }
-    };
+      working.meta = fresh.meta || working.meta;
+      liveOffersCache = working;
+    }
+
     liveOffersLoaded = true;
     renderLiveOffers(liveOffersCache);
   } catch(error){

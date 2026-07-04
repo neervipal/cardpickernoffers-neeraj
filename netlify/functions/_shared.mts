@@ -76,10 +76,10 @@ async function tavilySearch(card: { name: string; searchName: string }) {
     body: JSON.stringify({
       api_key: apiKey,
       query: `${card.searchName} current credit card promotional offers coupons discounts valid India 2026`,
-      search_depth: "advanced",
+      search_depth: "basic",
       include_answer: false,
       include_raw_content: false,
-      max_results: 6
+      max_results: 3
     })
   });
 
@@ -199,6 +199,26 @@ async function scanCard(cardId: string, card: { name: string; searchName: string
       errorMessage: error?.message || "Unknown scan error"
     };
   }
+}
+
+export async function scanAndSaveCard(cardId: string) {
+  const card = CARDS[cardId];
+  if (!card) throw new Error(`Unknown cardId: ${cardId}`);
+
+  const result = await scanCard(cardId, card);
+  const store = getStore(STORE_NAME);
+  await store.setJSON(`offer:${cardId}`, result);
+
+  const { results } = await readAllOffers();
+  const meta = {
+    scannedAt: new Date().toISOString(),
+    cardCount: results.length,
+    okCount: results.filter((item: any) => item.status === "ok" || item.status === "empty").length,
+    errorCount: results.filter((item: any) => item.status === "error").length
+  };
+  await store.setJSON(META_KEY, meta);
+
+  return { result, meta };
 }
 
 export async function runFullScan() {
